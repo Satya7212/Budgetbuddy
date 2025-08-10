@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-color-mode="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BudgetBuddy Assistant</title>
+  <link rel="stylesheet" href="chatbot.css" />
+</head>
+<body>
+  <div class="chat-app">
+    <header class="chat-header">
+      <div>
+        <div class="title">BudgetBuddy Assistant</div>
+        <div class="subtitle">Ask about your expenses, budgeting, or finance concepts.</div>
+      </div>
+      <div class="header-actions">
+        <a href="/" class="link">Back</a>
+      </div>
+    </header>
+
+    <main id="chat-window" class="chat-window" aria-live="polite">
+      <!-- messages will be appended here -->
+    </main>
+
+    <form id="chat-form" class="chat-form" autocomplete="off">
+      <input id="chat-input" name="message" type="text" placeholder="Ask me about your spending, or type 'help'..." required />
+      <button type="submit" class="btn-primary">Send</button>
+    </form>
+  </div>
+
+  <script src="chatbot.js"></script>
+</body>
+</html>
