@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BudgetBuddy — Visualizations</title>
 
-  <!-- Chart.js -->
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Page-specific styles */
+    
     :root {
       --card-radius: 12px;
       --card-pad: 14px;
@@ -63,13 +63,13 @@
 
     .download-link { text-decoration:none; }
 
-    /* small tooltip-like hint */
+    
     .hint { font-size:0.84rem; color:var(--muted); }
 
-    /* chart legend wrap */
+    
     .legend-wrap { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
-    /* responsive adjustments */
+    
     @media (max-width:560px){
       .chart-card { padding:12px; min-height:220px; }
       .chart-canvas { height:200px; }
@@ -90,7 +90,7 @@
     </div>
 
     <div class="grid">
-      <!-- Category Pie -->
+      
       <section class="chart-card" id="card-category">
         <div class="chart-head">
           <h3>Spending by Category</h3>
@@ -103,7 +103,7 @@
         <div class="legend-wrap" id="category-legend" aria-hidden="true"></div>
       </section>
 
-      <!-- Monthly Bar -->
+      
       <section class="chart-card" id="card-monthly">
         <div class="chart-head">
           <h3>Monthly Totals</h3>
@@ -121,7 +121,7 @@
         <canvas id="monthlyChart" class="chart-canvas" role="img" aria-label="Monthly totals chart"></canvas>
       </section>
 
-      <!-- Daily Line -->
+      
       <section class="chart-card" id="card-daily">
         <div class="chart-head">
           <h3>Daily Spending (last 30 days)</h3>
@@ -133,7 +133,7 @@
         <canvas id="dailyChart" class="chart-canvas" role="img" aria-label="Daily spending chart"></canvas>
       </section>
 
-      <!-- Small notes / controls -->
+      
       <section class="chart-card">
         <h3>Controls</h3>
         <p class="small-note">Use the controls to change ranges or download the visible chart as an image.</p>

@@ -1,10 +1,10 @@
-// chatbot.js - frontend for rule-based assistant
+
 
 const chatWindow = document.getElementById('chat-window');
 const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('chat-input');
 
-// helper to append message
+
 function appendMessage(text, who='bot', meta='') {
   const el = document.createElement('div');
   el.className = `msg ${who}`;
@@ -16,7 +16,7 @@ function appendMessage(text, who='bot', meta='') {
 
 function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
 
-// show typing indicator
+
 function showTyping() {
   const el = document.createElement('div');
   el.className = 'msg bot';
@@ -27,11 +27,11 @@ function showTyping() {
 }
 
 async function sendMessage(message) {
-  // show user message
+  
   appendMessage(message, 'user');
   chatInput.value = '';
 
-  // show typing
+
   const typingEl = showTyping();
 
   try {
@@ -54,12 +54,12 @@ async function sendMessage(message) {
   }
 }
 
-// load a welcome message (only once)
+
 (function init() {
   appendMessage('Hello — I am your finance assistant. Ask me about your expenses, budgets, or basic finance concepts.', 'bot');
 })();
 
-// handle form submit
+
 chatForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const txt = chatInput.value.trim();

@@ -1,9 +1,8 @@
-// app.js - Finomic-inspired dashboard logic
-// Talks to: /api/expenses, /api/expenses/:id, /api/download, /graph, /chat
+
 
 const API = '/api/expenses';
 
-// Elements
+
 const currentBalanceEl = document.getElementById('current-balance');
 const totalSpentEl = document.getElementById('total-spent');
 const totalExpensesEl = document.getElementById('total-expenses');
@@ -24,14 +23,13 @@ const saveBtn = document.getElementById('save-button');
 const menuToggle = document.getElementById('menu-toggle');
 const sidebar = document.getElementById('sidebar');
 
-// Sparklines
+
 let sparkTotal, sparkMonth;
 
-// State
+
 let expenses = [];
 let editingId = null;
 
-// THEME init (dark-first, persists)
 const themeCheckbox = document.getElementById('theme-toggle');
 (function initTheme() {
   const saved = localStorage.getItem('color-mode');
@@ -48,7 +46,7 @@ if (themeCheckbox) {
   });
 }
 
-// Sidebar toggle (mobile)
+
 if (menuToggle) {
   menuToggle.addEventListener('click', () => {
     if (sidebar.style.display === 'none' || getComputedStyle(sidebar).display === 'none') {
@@ -59,7 +57,7 @@ if (menuToggle) {
   });
 }
 
-// Open/close modal
+
 addBtn.addEventListener('click', () => openModal());
 modalClose.addEventListener('click', closeModal);
 cancelBtn.addEventListener('click', closeModal);
@@ -78,7 +76,7 @@ function closeModal() {
   editingId = null; expenseForm.reset();
 }
 
-// Fetch expenses from server
+
 async function loadExpenses() {
   try {
     const res = await fetch(API);
@@ -90,7 +88,7 @@ async function loadExpenses() {
   }
 }
 
-// Render everything
+
 function renderAll() {
   renderQuickFilter();
   renderKPIs();
@@ -99,7 +97,7 @@ function renderAll() {
   renderPreview();
 }
 
-// Quick filter dropdown
+
 function renderQuickFilter() {
   const cats = Array.from(new Set(expenses.map(e => e.category).filter(Boolean))).sort();
   quickFilter.innerHTML = '<option value="">All categories</option>';
@@ -108,7 +106,7 @@ function renderQuickFilter() {
   });
 }
 
-// Compute KPIs
+
 function computeKPIs() {
   const now = new Date();
   const thisMonth = now.getMonth();
@@ -118,7 +116,7 @@ function computeKPIs() {
   let balanceAll = 0;
   const categoryTotals = {};
   let largest = { amount: 0 };
-  const dailySums = {}; // YYYY-MM-DD -> sum
+  const dailySums = {}; 
 
   for (const e of expenses) {
     const amt = Number(e.amount) || 0;
@@ -133,11 +131,11 @@ function computeKPIs() {
     if (amt > largest.amount) largest = { amount: amt, description: e.description };
   }
 
-  // avg daily (days elapsed)
+  
   const daysElapsed = new Date().getDate();
   const avgDaily = daysElapsed ? (totalThisMonth / daysElapsed) : 0;
 
-  // top category
+  
   let topCat = '—', topSum = 0;
   Object.entries(categoryTotals).forEach(([k,v]) => { if (v > topSum){ topSum=v; topCat=k; } });
 
@@ -146,7 +144,7 @@ function computeKPIs() {
   };
 }
 
-// Render KPI DOM
+
 function renderKPIs() {
   const k = computeKPIs();
   currentBalanceEl.textContent = formatMoney(k.balanceAll);
@@ -155,16 +153,16 @@ function renderKPIs() {
   topCategoryEl.textContent = k.topCat || '—';
   topCatValueEl.textContent = k.topSum ? formatMoney(k.topSum) : '';
   avgSpendEl.textContent = formatMoney(k.avgDaily);
-  // month note
+  
   const monthName = new Date().toLocaleString(undefined, { month: 'long' });
   const note = `${monthName} ${new Date().getFullYear()}`;
   document.getElementById('balance-note').textContent = note;
 }
 
-// Create/Update sparklines
+
 function renderSparklines() {
   const k = computeKPIs();
-  // Spark total: use last 12 days across all months (sum per day)
+  
   const daysBack = 12;
   const labels = [];
   const totals = [];
@@ -176,14 +174,14 @@ function renderSparklines() {
     totals.push(Number(v.toFixed(2)));
   }
 
-  // monthly spark: last 6 months totals
+  
   const mmLabels = [];
   const mmTotals = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(); d.setMonth(d.getMonth() - i);
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     mmLabels.push(d.toLocaleString(undefined, { month:'short' }));
-    // compute total for that month
+    
     let sum = 0;
     for (const e of expenses) {
       const dd = new Date(e.date);
@@ -193,7 +191,7 @@ function renderSparklines() {
     mmTotals.push(Number(sum.toFixed(2)));
   }
 
-  // destroy previous charts if any
+  
   if (sparkTotal) { try { sparkTotal.destroy(); } catch(_){} }
   if (sparkMonth) { try { sparkMonth.destroy(); } catch(_){} }
 
@@ -218,9 +216,9 @@ function renderSparklines() {
   });
 }
 
-// Render preview list and table
+
 function renderPreview() {
-  // recent 5
+  
   const sorted = [...expenses].sort((a,b) => new Date(b.date)-new Date(a.date));
   const preview = sorted.slice(0,6);
   recentPreview.innerHTML = preview.map(r => txHtml(r)).join('');
@@ -264,13 +262,13 @@ function renderTable() {
     `;
     expensesTableBody.appendChild(tr);
   }
-  // attach handlers
+  
   expensesTableBody.querySelectorAll('.del-btn').forEach(b => b.addEventListener('click', onDelete));
   expensesTableBody.querySelectorAll('.edit-btn').forEach(b => b.addEventListener('click', onEdit));
   quickFilter.addEventListener('change', renderTable);
 }
 
-// Helpers
+
 function formatMoney(v){ return '$' + (Number(v)||0).toFixed(2); }
 function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
 function badgeClass(cat){
@@ -284,7 +282,7 @@ function badgeClass(cat){
   return 'other';
 }
 
-// Actions: delete, edit
+
 async function onDelete(e){
   const id = e.currentTarget.dataset.id;
   if (!confirm('Delete this expense?')) return;
@@ -303,7 +301,7 @@ function onEdit(e){
   openModal(rec);
 }
 
-// Submit form (add or edit)
+
 expenseForm.addEventListener('submit', async (ev) => {
   ev.preventDefault();
   saveBtn.disabled = true;
@@ -334,5 +332,5 @@ expenseForm.addEventListener('submit', async (ev) => {
   } finally { saveBtn.disabled = false; }
 });
 
-// initial load
+
 loadExpenses();
