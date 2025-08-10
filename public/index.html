@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en" data-color-mode="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BudgetBuddy — Dashboard</title>
+
+  <!-- Inter font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="brand">
+          <svg class="logo" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+            <path fill="currentColor" d="M4 13h6v7H4zM10 3h6v17h-6zM16 8h4v12h-4z"></path>
+          </svg>
+          <span class="brand-name">BudgetBuddy</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Main">
+        <a href="/" class="nav-item active">Dashboard</a>
+        <a href="/graph" class="nav-item">Visualize</a>
+        <a href="/chat" class="nav-item">Chatbot</a>
+        <a href="/api/download" class="nav-item">Download CSV</a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <button id="collapse-btn" class="btn-ghost small">Hide</button>
+      </div>
+    </aside>
+
+    <!-- Main area -->
+    <div class="main">
+      <!-- Top bar -->
+      <header class="topbar">
+        <div class="top-left">
+          <button id="menu-toggle" class="btn-ghost" aria-label="Toggle menu">☰</button>
+          <div class="page-title">Dashboard</div>
+        </div>
+
+        <div class="top-right">
+          <!-- animated theme switch -->
+          <label class="theme-switch" title="Toggle dark / light" aria-label="Toggle color mode">
+            <input id="theme-toggle" type="checkbox" />
+            <span class="switch-track">
+              <span class="switch-knob"></span>
+              <span class="icon sun">☀️</span>
+              <span class="icon moon">🌙</span>
+            </span>
+          </label>
+
+          <button id="add-expense-button" class="btn-primary">+ Add Expense</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="container">
+        <!-- Overview row -->
+        <section class="overview">
+          <div class="left-overview">
+            <div class="big-card card">
+              <div class="big-card-header">
+                <div>
+                  <div class="muted">Current Balance</div>
+                  <div class="big-balance" id="current-balance">$0.00</div>
+                  <div class="muted small" id="balance-note">This month</div>
+                </div>
+                <div class="spark-wrap">
+                  <canvas id="spark-total" width="180" height="60"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="kpi-row">
+              <div class="kpi card">
+                <div class="kpi-title">Total Spent (This Month)</div>
+                <div class="kpi-value" id="total-spent">$0.00</div>
+                <canvas id="spark-month" class="mini-spark" width="120" height="40"></canvas>
+              </div>
+              <div class="kpi card">
+                <div class="kpi-title">Total Expenses</div>
+                <div class="kpi-value" id="total-expenses">0</div>
+                <div class="kpi-sub muted" id="total-exp-note">All time</div>
+              </div>
+              <div class="kpi card">
+                <div class="kpi-title">Top Category</div>
+                <div class="kpi-value" id="top-category">—</div>
+                <div class="kpi-sub muted" id="top-cat-value"></div>
+              </div>
+              <div class="kpi card">
+                <div class="kpi-title">Avg Daily Spend</div>
+                <div class="kpi-value" id="avg-spend">$0.00</div>
+                <div class="kpi-sub muted">This month</div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="right-overview card">
+            <div class="mini-actions">
+              <div class="muted small">Quick filters</div>
+              <select id="quick-filter" class="select-filter">
+                <option value="">All categories</option>
+              </select>
+            </div>
+
+            <div class="recent-list" id="recent-preview">
+              <!-- recent rows injected by JS -->
+            </div>
+
+            <div class="recent-footer">
+              <a href="/graph" class="link">View detailed analytics →</a>
+            </div>
+          </aside>
+        </section>
+
+        <!-- Recent transactions table (preview) -->
+        <section class="recent card">
+          <div class="recent-header">
+            <h3>Recent Transactions</h3>
+            <div class="controls">
+              <a href="/expenses" class="link">View all</a>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="expenses-table" class="striped">
+              <thead>
+                <tr><th>Date</th><th>Category</th><th>Description</th><th class="amount-col">Amount</th><th>Actions</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal Add/Edit -->
+  <div class="modal" id="modal-expense" aria-hidden="true">
+    <div class="modal-bg" id="modal-bg"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <header class="modal-header">
+        <h3 id="modal-title">Add Expense</h3>
+        <button id="modal-close" class="btn-ghost" aria-label="Close">✕</button>
+      </header>
+
+      <form id="expense-form" class="modal-form" autocomplete="off">
+        <label class="form-row">
+          <span class="label">Description</span>
+          <input name="description" id="desc" type="text" required placeholder="e.g. Groceries at Market"/>
+        </label>
+
+        <div class="form-grid">
+          <label class="form-row">
+            <span class="label">Amount (USD)</span>
+            <input name="amount" id="amount" type="number" min="0.01" step="0.01" required placeholder="0.00" />
+          </label>
+
+          <label class="form-row">
+            <span class="label">Category</span>
+            <select id="category" name="category" required>
+              <option value="">Select category</option>
+              <option>Food</option>
+              <option>Transport</option>
+              <option>Utilities</option>
+              <option>Entertainment</option>
+              <option>Health</option>
+              <option>Other</option>
+            </select>
+          </label>
+
+          <label class="form-row">
+            <span class="label">Date</span>
+            <input name="date" id="date" type="date" required />
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancel-button" class="btn-outline">Cancel</button>
+          <button type="submit" id="save-button" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
