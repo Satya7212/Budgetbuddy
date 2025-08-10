@@ -1,16 +1,4 @@
-/**
- * server.js
- * BudgetBuddy server with SQLite backend, CSV export, Graph page and Chatbot endpoint.
- *
- * Run:
- *   npm install express sqlite3
- *   node server.js
- *
- * Open:
- *   http://localhost:3000        (main app)
- *   http://localhost:3000/graph  (charts)
- *   http://localhost:3000/chat   (chat UI)
- */
+
 
 const express = require('express');
 const path = require('path');
@@ -20,15 +8,15 @@ const fs = require('fs');
 const DB_FILE = path.join(__dirname, 'expenses.db');
 const app = express();
 
-// ensure db file exists
+
 if (!fs.existsSync(DB_FILE)) fs.closeSync(fs.openSync(DB_FILE, 'w'));
 
-app.use(express.json()); // parse JSON bodies
+app.use(express.json()); 
 
-// serve static files from public/
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-// init sqlite db
+
 const db = new sqlite3.Database(DB_FILE, (err) => {
   if (err) return console.error('DB open error', err.message);
 });
@@ -40,7 +28,7 @@ db.serialize(() => {
     category TEXT NOT NULL,
     date TEXT NOT NULL
   )`);
-  // seed some sample rows if table empty
+  
   db.get('SELECT COUNT(*) as c FROM expenses', (err, row) => {
     if (err) return console.error(err);
     if (row && row.c === 0) {
@@ -59,7 +47,7 @@ db.serialize(() => {
   });
 });
 
-// VALIDATION
+
 function validateExpense(payload) {
   if (!payload) return 'Missing payload';
   const { description, amount, category, date } = payload;
@@ -70,13 +58,7 @@ function validateExpense(payload) {
   return null;
 }
 
-/* ----------------- CRUD APIs ----------------- */
 
-/**
- * GET /api/expenses
- * optional query params:
- *   category, start (YYYY-MM-DD), end (YYYY-MM-DD)
- */
 app.get('/api/expenses', (req, res) => {
   let sql = 'SELECT * FROM expenses';
   const filters = [];
@@ -98,10 +80,7 @@ app.get('/api/expenses', (req, res) => {
   });
 });
 
-/**
- * POST /api/expenses
- * body { description, amount, category, date }
- */
+
 app.post('/api/expenses', (req, res) => {
   const errMsg = validateExpense(req.body);
   if (errMsg) return res.status(400).json({ error: errMsg });
@@ -119,9 +98,7 @@ app.post('/api/expenses', (req, res) => {
   stmt.finalize();
 });
 
-/**
- * PUT /api/expenses/:id
- */
+
 app.put('/api/expenses/:id', (req, res) => {
   const id = Number(req.params.id);
   if (!id) return res.status(400).json({ error: 'Invalid id' });
@@ -144,9 +121,7 @@ app.put('/api/expenses/:id', (req, res) => {
   );
 });
 
-/**
- * DELETE /api/expenses/:id
- */
+
 app.delete('/api/expenses/:id', (req, res) => {
   const id = Number(req.params.id);
   if (!id) return res.status(400).json({ error: 'Invalid id' });
@@ -157,17 +132,12 @@ app.delete('/api/expenses/:id', (req, res) => {
   });
 });
 
-/* -------------- New server-side features -------------- */
 
-/**
- * GET /api/download
- * returns CSV (all expenses)
- */
 app.get('/api/download', (req, res) => {
   db.all('SELECT * FROM expenses ORDER BY date DESC', [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
 
-    // convert rows to CSV string (simple, no external deps)
+    
     const fields = ['id', 'description', 'amount', 'category', 'date'];
     const escapeCsv = v => {
       if (v === null || v === undefined) return '';
@@ -185,13 +155,7 @@ app.get('/api/download', (req, res) => {
   });
 });
 
-/**
- * POST /api/chat
- * Simple rules-based chatbot answers for demo:
- * - if message contains "total" => returns total spending
- * - if message contains "category" => returns per-category breakdown
- * - else returns fallback text
- */
+
 app.post('/api/chat', express.json(), (req, res) => {
   const msg = (req.body.message || '').toLowerCase().trim();
   if (!msg) return res.json({ reply: "Send me a question like 'total' or 'category breakdown'." });
@@ -209,7 +173,7 @@ app.post('/api/chat', express.json(), (req, res) => {
       return res.json({ reply: `Category breakdown — ${parts.join(' • ')}` });
     });
   } else if (msg.includes('top')) {
-    // "top 3" or "top"
+  
     const nMatch = msg.match(/top\s+(\d+)/);
     let n = 5;
     if (nMatch) n = Math.min(50, Number(nMatch[1]));
@@ -223,7 +187,7 @@ app.post('/api/chat', express.json(), (req, res) => {
   }
 });
 
-/* Serve graph & chat pages if present in /public */
+
 app.get('/graph', (req, res) => {
   const p = path.join(__dirname, 'public', 'graph.html');
   if (fs.existsSync(p)) return res.sendFile(p);
@@ -235,14 +199,12 @@ app.get('/chat', (req, res) => {
   return res.status(404).send('chat.html not found in /public');
 });
 
-// ===== Add this to your server.js (place before the "app.get('*', ...')" fallback) =====
 
-// Chatbot endpoint (rule-based, offline)
 app.post('/api/chatbot', express.json(), async (req, res) => {
   const msg = (req.body && req.body.message) ? String(req.body.message).trim() : '';
   if (!msg) return res.status(400).json({ error: 'Empty message' });
 
-  // helper to run SQL queries with Promise
+  
   const dbAll = (sql, params = []) => new Promise((resolve, reject) =>
     db.all(sql, params, (err, rows) => err ? reject(err) : resolve(rows))
   );
@@ -252,33 +214,33 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
 
   const text = msg.toLowerCase();
 
-  // small helper to format money
+  
   const fmt = (v) => {
     const n = Number(v) || 0;
     return '$' + n.toFixed(2);
   };
 
-  // helper: total spent in a month (YYYY-MM)
+
   async function totalInMonth(ym) {
     const row = await dbGet('SELECT SUM(amount) as s FROM expenses WHERE substr(date,1,7) = ?', [ym]);
     return row && row.s ? Number(row.s) : 0;
   }
 
-  // helper: total in a date range
+  
   async function totalBetween(start, end) {
     const row = await dbGet('SELECT SUM(amount) as s FROM expenses WHERE date >= ? AND date <= ?', [start, end]);
     return row && row.s ? Number(row.s) : 0;
   }
 
-  // helper: totals by category (optional limit)
+  
   async function totalsByCategory() {
     const rows = await dbAll('SELECT category, SUM(amount) as s FROM expenses GROUP BY category ORDER BY s DESC');
     return rows;
   }
 
-  // Basic intent detection (rule-based)
+  
   try {
-    // Greetings
+    
     if (/\b(hi|hello|hey|good morning|good afternoon|good evening)\b/.test(text)) {
       const replies = [
         'Hello — how can I help you with your finances today?',
@@ -287,7 +249,7 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       return res.json({ reply: replies[Math.floor(Math.random()*replies.length)] });
     }
 
-    // Ask total spent this month
+    
     if (/\b(total|how much).*this month|spent this month|month.*spent\b/.test(text)) {
       const now = new Date();
       const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -295,7 +257,7 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       return res.json({ reply: `You spent ${fmt(total)} in ${now.toLocaleString(undefined,{month:'long', year:'numeric'})}.` });
     }
 
-    // Ask about a specific category this month, e.g. "How much did I spend on food this month?"
+    
     {
       const m = text.match(/(?:spent|how much).*on\s+([a-zA-Z ]{2,30})\s*(?:this month|in\s+\w+)?/);
       if (m) {
@@ -308,7 +270,7 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       }
     }
 
-    // Ask top category (overall)
+    
     if (/\b(top category|biggest category|largest category)\b/.test(text)) {
       const rows = await totalsByCategory();
       if (!rows.length) return res.json({ reply: 'I don’t see any expenses yet.' });
@@ -316,7 +278,7 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       return res.json({ reply: `Your top category is ${top.category} with ${fmt(top.s)} total spending.` });
     }
 
-    // Ask for breakdown by category
+    
     if (/\b(breakdown|by category|category breakdown)\b/.test(text)) {
       const rows = await totalsByCategory();
       if (!rows.length) return res.json({ reply: 'No expenses found to create a breakdown.' });
@@ -324,7 +286,7 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       return res.json({ reply: `Category breakdown — ${parts.join(' · ')}` });
     }
 
-    // Ask for average daily spend this month
+    
     if (/\b(avg|average).*daily.*month|average daily\b/.test(text)) {
       const now = new Date();
       const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -334,7 +296,7 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       return res.json({ reply: `Your average daily spend so far this month is ${fmt(avg)}.` });
     }
 
-    // Ask for expenses in last N days (e.g. "last 7 days")
+    
     {
       const m = text.match(/last\s+(\d{1,2})\s+days?/);
       if (m) {
@@ -348,19 +310,19 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       }
     }
 
-    // Budget suggestion (simple)
+    
     if (/\b(suggest|help|budget).*budget\b/.test(text) || /\b(i want to budget|help me budget)\b/.test(text)) {
-      // Try to parse income number from text
+      
       const m = text.match(/(\d[\d,\.]*)/);
       let income = null;
       if (m) {
         income = Number(m[1].replace(/,/g, ''));
       }
-      // compute monthly total
+      
       const now = new Date();
       const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
       const total = await totalInMonth(ym);
-      // simple 50/30/20 suggestion
+      
       const suggestion = [
         `A simple starting plan is the 50/30/20 rule: 50% needs, 30% wants, 20% savings/debt.`,
         `This month you've spent ${fmt(total)} so far.`
@@ -374,7 +336,7 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       return res.json({ reply: suggestion.join(' ') });
     }
 
-    // Finance concept explanations (short)
+    
     if (/\binflation\b/.test(text)) {
       return res.json({ reply: 'Inflation means the general rise in prices over time, reducing purchasing power. A small, steady inflation is normal; high inflation erodes savings and income.' });
     }
@@ -382,9 +344,9 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       return res.json({ reply: 'For savings: start with an emergency fund (3–6 months expenses), use high-yield savings for short-term goals, and diversified investments for long-term growth.' });
     }
 
-    // Personal tip based on recent spending (heuristic)
+    
     if (/\b(tip|advice|suggest)\b/.test(text)) {
-      // find top category
+      
       const rows = await totalsByCategory();
       if (rows.length) {
         const top = rows[0].category;
@@ -394,12 +356,12 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       }
     }
 
-    // If message mentions "expense" + "add" -> give instructions
+    
     if (/\b(add|log).*expense\b/.test(text) || /\bhow to add expense\b/.test(text)) {
       return res.json({ reply: 'To add an expense use the Add Expense button on the dashboard. Provide description, amount, category, and date. I can also add it for you if you paste the details here like: add expense, Lunch, 12.50, Food, 2025-08-09' });
     }
 
-    // Try to parse raw add request: "add expense, Lunch, 12.50, Food, 2025-08-09"
+    
     {
       const addMatch = text.match(/add expense[,:\s]+(.+?),\s*([\d\.]+),\s*([a-zA-Z ]+),\s*(\d{4}-\d{2}-\d{2})/i);
       if (addMatch) {
@@ -407,7 +369,7 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
         const amount = Number(addMatch[2]);
         const category = addMatch[3].trim();
         const date = addMatch[4];
-        // insert into DB
+        
         await new Promise((resolve, reject) => {
           const stmt = db.prepare('INSERT INTO expenses(description, amount, category, date) VALUES (?,?,?,?)');
           stmt.run(description, amount, category, date, function (err) {
@@ -420,7 +382,7 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
       }
     }
 
-    // Small talk fallback (polite casual)
+    
     const smallTalk = [
       "I can help with expense summaries, budgeting tips, and basic finance explanations. Ask me things like 'How much did I spend this month?' or 'Suggest a budget.'",
       "I’m here to help with your finances. Would you like a summary of your recent spending or some budgeting tips?"
@@ -434,11 +396,11 @@ app.post('/api/chatbot', express.json(), async (req, res) => {
 });
 
 
-// fallback (serve index.html for any other route so SPAs work)
+
 app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`BudgetBuddy listening at http://localhost:${PORT}`));

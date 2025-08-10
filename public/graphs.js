@@ -1,15 +1,7 @@
-/**
- * graphs.js
- * Fetches /api/expenses and renders 3 animated charts with Chart.js
- * - categoryChart (pie)
- * - monthlyChart (bar)
- * - dailyChart (line)
- *
- * Also supports download buttons and updates on theme change.
- */
+
 
 (async () => {
-  // DOM
+  
   const categoryCtx = document.getElementById('categoryChart').getContext('2d');
   const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
   const dailyCtx = document.getElementById('dailyChart').getContext('2d');
@@ -22,12 +14,12 @@
   const refreshCat = document.getElementById('refresh-btn-cat');
   const refreshDaily = document.getElementById('refresh-btn-daily');
 
-  // Chart instances (will be set below)
+  
   let categoryChart = null;
   let monthlyChart = null;
   let dailyChart = null;
 
-  // Color palettes for light/dark
+  
   const paletteLight = {
     primary: '#2563eb',
     accent: '#7c3aed',
@@ -47,27 +39,27 @@
     ]
   };
 
-  // read current theme mode
+  
   function isDark() {
     return document.documentElement.getAttribute('data-color-mode') === 'dark';
   }
   function pal() { return isDark() ? paletteDark : paletteLight; }
 
-  // utility: fetch expenses
+  
   async function fetchExpenses() {
     const res = await fetch('/api/expenses');
     if (!res.ok) throw new Error('Failed to load expenses');
     return res.json();
   }
 
-  // Process dataset helpers
+  
   function categoryTotals(expenses) {
     const sums = {};
     for (const e of expenses) {
       const cat = e.category || 'Other';
       sums[cat] = (sums[cat] || 0) + Number(e.amount || 0);
     }
-    // sort descending
+    
     const entries = Object.entries(sums).sort((a,b) => b[1] - a[1]);
     return entries;
   }
@@ -75,7 +67,7 @@
   function monthlyTotals(expenses, monthsBack = 12) {
     const now = new Date();
     const map = {};
-    // create keys for last monthsBack months
+    
     for (let i = monthsBack - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -114,7 +106,7 @@
     return { labels, values };
   }
 
-  // Chart creation functions
+  
   function createCategoryChart(labels, data) {
     const colors = pal().chartColors;
     if (categoryChart) categoryChart.destroy();
@@ -141,7 +133,7 @@
       }
     });
 
-    // legend DOM
+    
     const legendWrap = document.getElementById('category-legend');
     legendWrap.innerHTML = '';
     labels.forEach((lab, i) => {
@@ -215,23 +207,23 @@
     });
   }
 
-  // Render pipeline
+  
   async function renderAll() {
     try {
       const expenses = await fetchExpenses();
 
-      // category
+      
       const catEntries = categoryTotals(expenses);
       const catLabels = catEntries.map(e => e[0]);
       const catVals = catEntries.map(e => Number(e[1].toFixed(2)));
       createCategoryChart(catLabels, catVals);
 
-      // monthly
+      
       const monthsBack = Number(monthsRangeSelect.value || 12);
       const monthly = monthlyTotals(expenses, monthsBack);
       createMonthlyChart(monthly.labels, monthly.values);
 
-      // daily (last 30)
+      
       const daily = dailyTotals(expenses, 30);
       createDailyChart(daily.labels, daily.values);
     } catch (err) {
@@ -239,7 +231,7 @@
     }
   }
 
-  // download helper
+  
   function downloadChartImage(chartInstance, filename = 'chart.png') {
     try {
       const dataUrl = chartInstance.toBase64Image('image/png', 1);
@@ -252,7 +244,7 @@
     }
   }
 
-  // event wiring
+  
   downloadCat.addEventListener('click', () => { if (categoryChart) downloadChartImage(categoryChart, 'category.png'); });
   downloadMonthly.addEventListener('click', () => { if (monthlyChart) downloadChartImage(monthlyChart, 'monthly.png'); });
   downloadDaily.addEventListener('click', () => { if (dailyChart) downloadChartImage(dailyChart, 'daily.png'); });
@@ -261,23 +253,23 @@
   refreshCat.addEventListener('click', renderAll);
   refreshDaily.addEventListener('click', renderAll);
 
-  // theme handling: re-render on theme change
+  
   const obs = new MutationObserver((mut) => {
     for (const m of mut) {
       if (m.attributeName === 'data-color-mode') {
-        // short delay to let CSS apply
+        
         setTimeout(() => renderAll(), 80);
       }
     }
   });
   obs.observe(document.documentElement, { attributes: true });
 
-  // storage event (in case toggle changed in another tab)
+  
   window.addEventListener('storage', (e) => {
     if (e.key === 'color-mode') setTimeout(renderAll, 80);
   });
 
-  // initial render
+  
   renderAll();
 
 })();

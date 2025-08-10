@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BudgetBuddy — Dashboard</title>
 
-  <!-- Inter font -->
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <!-- Chart.js -->
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app">
-    <!-- Sidebar -->
+    
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-top">
         <div class="brand">
@@ -38,9 +38,9 @@
       </div>
     </aside>
 
-    <!-- Main area -->
+    
     <div class="main">
-      <!-- Top bar -->
+      
       <header class="topbar">
         <div class="top-left">
           <button id="menu-toggle" class="btn-ghost" aria-label="Toggle menu">☰</button>
@@ -48,7 +48,7 @@
         </div>
 
         <div class="top-right">
-          <!-- animated theme switch -->
+          
           <label class="theme-switch" title="Toggle dark / light" aria-label="Toggle color mode">
             <input id="theme-toggle" type="checkbox" />
             <span class="switch-track">
@@ -62,9 +62,9 @@
         </div>
       </header>
 
-      <!-- Content -->
+      
       <main class="container">
-        <!-- Overview row -->
+        
         <section class="overview">
           <div class="left-overview">
             <div class="big-card card">
@@ -113,7 +113,7 @@
             </div>
 
             <div class="recent-list" id="recent-preview">
-              <!-- recent rows injected by JS -->
+              
             </div>
 
             <div class="recent-footer">
@@ -122,7 +122,7 @@
           </aside>
         </section>
 
-        <!-- Recent transactions table (preview) -->
+        
         <section class="recent card">
           <div class="recent-header">
             <h3>Recent Transactions</h3>
@@ -144,7 +144,7 @@
     </div>
   </div>
 
-  <!-- Modal Add/Edit -->
+  
   <div class="modal" id="modal-expense" aria-hidden="true">
     <div class="modal-bg" id="modal-bg"></div>
     <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
